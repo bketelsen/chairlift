@@ -13,14 +13,17 @@ that would immediately become stale.
 |---|---|---|
 | Tests workflow | Latest lint, unit-test, race-detection, verification, and cross-architecture build results | [GitHub Actions](https://github.com/frostyard/chairlift/actions/workflows/test.yml) |
 | Pull request checks | Gate results attached to each proposed change, including reruns and logs | Open a pull request and select its **Checks** tab |
+| PR acceptance | Accepted and closed pull request counts over a rolling 90-day cohort | [Metric definition and reproducible query](metrics.md) |
 | Coverage | Line coverage produced by tests under `internal/...` | [Codecov](https://app.codecov.io/gh/frostyard/chairlift) |
 | Build artifacts | Seven-day Linux binaries for the workflow's amd64 and arm64 matrix | Open a successful workflow run and view **Artifacts** |
 | Release history | Published versions and release assets | [GitHub Releases](https://github.com/frostyard/chairlift/releases) |
 
-Coverage upload is intentionally informational: `.github/workflows/test.yml`
-sets Codecov failures to non-blocking. A missing Codecov report therefore does
-not mean tests failed, and a green workflow does not prove that coverage was
-uploaded. Use the workflow's **Unit Tests** log to distinguish those outcomes.
+`codecov.yml` compares project coverage with the pull request's base and fails
+its project status only when coverage drops by more than one percentage point.
+It deliberately has no fixed project target or patch target. The upload step
+remains non-blocking, so a missing Codecov report does not mean tests failed,
+and a green Tests workflow does not prove that coverage was uploaded. Use the
+workflow's **Unit Tests** log to distinguish those outcomes.
 
 ## Enforced checks
 
@@ -35,7 +38,8 @@ The repository's `Tests` workflow runs on pushes and pull requests targeting
 
 `make ci` mirrors those credential-free checks locally in fail-fast order and
 also rebuilds the native binaries at the end. It is the pre-submission quality
-gate documented in `AGENTS.md`.
+gate documented in `AGENTS.md`; Codecov's remote project status is additional
+and cannot be reproduced by that target.
 
 ```bash
 make ci
@@ -75,8 +79,9 @@ For an agent-authored pull request, audit the signals in this order:
    aggregate check mark.
 4. Review coverage for changed pure-Go logic and verify regression tests cover
    the reported failure mode.
-5. Apply the repository invariants and learned skills from `AGENTS.md`, then
-   record concrete review findings on the pull request.
+5. Apply the [pull request review rubric](review-rubric.md), including the
+   repository invariants and learned skills, then record concrete findings on
+   the pull request.
 
 Reusable implementation and review prompts are available in the
 [agent prompt catalog](prompts/index.md). They are aids only; repository
